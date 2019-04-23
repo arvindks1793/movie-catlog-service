@@ -8,6 +8,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,12 +29,19 @@ public class MovieCatlogController {
 	@Autowired
 	private DiscoveryClient discoveryclient;
 
+	@Autowired
+	private LoadBalancerClient loadBalancerClient;
+
 	@RequestMapping("/catlog/{userid}")
 	public String getMovieRatignById(@PathVariable String userid)
 			throws JSONException {
-		List<ServiceInstance> instances = discoveryclient
-				.getInstances("movie-rating-service");
-		ServiceInstance sintance = instances.get(0);
+		/*
+		 * List<ServiceInstance> instances = discoveryclient
+		 * .getInstances("movie-rating-service"); ServiceInstance sintance =
+		 * instances.get(0);
+		 */
+		ServiceInstance sintance = loadBalancerClient
+				.choose("movie-rating-service");
 		String BaseUrl = sintance.getUri().toString();
 		BaseUrl = BaseUrl + "/rating" + "/" + userid;
 		ResponseEntity<String> responseentity = null;
@@ -60,9 +68,13 @@ public class MovieCatlogController {
 	}
 
 	private String getMovieInformation(String movieId) {
-		List<ServiceInstance> instances = discoveryclient
-				.getInstances("movie-info-service");
-		ServiceInstance sintance = instances.get(0);
+		/*
+		 * List<ServiceInstance> instances = discoveryclient
+		 * .getInstances("movie-info-service"); ServiceInstance sintance =
+		 * instances.get(0);
+		 */
+		ServiceInstance sintance = loadBalancerClient
+				.choose("movie-info-service");
 		String BaseUrl = sintance.getUri().toString();
 		BaseUrl = BaseUrl + "/info" + "/" + movieId;
 		ResponseEntity<String> responseentity = null;
